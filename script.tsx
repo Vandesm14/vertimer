@@ -28,6 +28,7 @@ interface TimerProps {
   onStart?: () => void;
   onStop?: () => void;
   onPause?: () => void;
+  onTick?: () => void;
   rate?: number;
 }
 
@@ -63,7 +64,7 @@ function Timer(props: TimerProps) {
   const [state, setState] = useReducer<TimerState, TimerAction>(
     (prevState, action) => {
       const start = (): TimerState => {
-        _setInterval(setInterval(increment, props.rate ?? 1000));
+        _setInterval(setInterval(tick, props.rate ?? 1000));
         tryCall(props.onStart);
         return "on";
       };
@@ -98,6 +99,10 @@ function Timer(props: TimerProps) {
 
   // TODO: Increment based on time between last tick instead of interval, which is unreliable
   const increment = () => setTime("increment");
+  const tick = () => {
+    tryCall(props.onTick);
+    increment();
+  };
 
   const toggle = () => {
     if (state === "on") {
