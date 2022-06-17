@@ -35,20 +35,6 @@ interface TimerProps {
 type TimerState = "on" | "off" | "paused";
 type TimerAction = "start" | "stop" | "pause";
 
-/*
-  Off: Start -> On
-  Off: Stop -> Off
-  Off: Pause -> Off
-
-  On: Start -> On
-  On: Stop -> Off
-  On: Pause -> Paused
-
-  Paused: Start -> On
-  Paused: Stop -> Off
-  Paused: Pause -> On
-*/
-
 function Timer(props: TimerProps) {
   const [time, setTime] = useReducer<number, "increment" | number>(
     (prevState, action) => {
@@ -60,6 +46,7 @@ function Timer(props: TimerProps) {
     },
     0
   );
+  const [startTime, setStartTime] = useState(0);
   const [interval, _setInterval] = useState<null | number>(null);
   const [state, setState] = useReducer<TimerState, TimerAction>(
     (prevState, action) => {
@@ -128,8 +115,6 @@ function Timer(props: TimerProps) {
       <span>{time}</span>
       <button onClick={toggle}>{buttonText()}</button>
       <button onClick={stop}>Stop</button>
-      <br />
-      <span>{state}</span>
     </div>
   );
 }
