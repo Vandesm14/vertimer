@@ -2,6 +2,9 @@
 	"dependencies": {
 		"preact": "^10.8.0"
 	},
+  "scripts": {
+    "start": "parcel index.html"
+  },
 	"devDependencies": {
 		"@parcel/transformer-sass": "2.6.0"
 	}
