@@ -22,13 +22,10 @@ const removeAtIndex = (arr: Array<any>, index: number) => [
   ...arr.slice(index + 1),
 ];
 
-const tryCall = (fn: Function) => fn && fn();
-
-interface Sprint {
-  startTime: number;
-  timeVal: number;
-  interval: number;
-}
+const tryCall = <F extends Function, P extends Parameters<any>>(
+  fn: F,
+  ...args: P
+) => fn && fn(...args);
 
 interface TimerProps {
   onStart?: () => void;
@@ -38,13 +35,23 @@ interface TimerProps {
   rate?: number;
 }
 
+interface TimerSprint {
+  startTime: number;
+  timeVal: number;
+  interval: number;
+}
+
 type TimerState = 'on' | 'off' | 'paused';
 type TimerAction = 'start' | 'stop' | 'pause';
 
 function Timer(props: TimerProps) {
   const rate = props.rate ?? 1000;
 
-  const [sprint, setSprint] = useState<Sprint>(null);
+  const [sprint, setSprint] = useState<TimerSprint>({
+    startTime: null,
+    timeVal: null,
+    interval: null,
+  });
   const [time, setTime] = useReducer<number, 'increment' | 'reset'>(
     (_, action) => {
       const now = Date.now();
@@ -98,11 +105,10 @@ function Timer(props: TimerProps) {
   );
 
   const toggle = () => (state === 'on' ? setState('pause') : setState('start'));
-  const increment = () => setTime('increment');
   const stop = () => setState('stop');
   const tick = () => {
     tryCall(props.onTick);
-    increment();
+    setTime('increment');
   };
 
   const buttonText = () => {
