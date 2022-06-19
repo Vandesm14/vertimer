@@ -27,6 +27,7 @@ const tryCall = (fn: Function) => fn && fn();
 interface Sprint {
   startTime: number;
   timeVal: number;
+  interval: number;
 }
 
 interface TimerProps {
@@ -56,28 +57,27 @@ function Timer(props: TimerProps) {
     },
     0
   );
-  const [interval, _setInterval] = useState<null | number>(null);
   const [state, setState] = useReducer<TimerState, TimerAction>(
     (prevState, action) => {
       const start = (): TimerState => {
         setSprint({
           startTime: Date.now(),
           timeVal: time,
+          interval: setInterval(tick, rate),
         });
-        _setInterval(setInterval(tick, rate));
         tryCall(props.onStart);
         return 'on';
       };
 
       const stop = (): TimerState => {
-        clearInterval(interval);
+        clearInterval(sprint.interval);
         setTime('reset');
         tryCall(props.onStop);
         return 'off';
       };
 
       const pause = (): TimerState => {
-        clearInterval(interval);
+        clearInterval(sprint.interval);
         tryCall(props.onPause);
         return 'paused';
       };
@@ -97,20 +97,13 @@ function Timer(props: TimerProps) {
     'off'
   );
 
+  const toggle = () => (state === 'on' ? setState('pause') : setState('start'));
   const increment = () => setTime('increment');
+  const stop = () => setState('stop');
   const tick = () => {
     tryCall(props.onTick);
     increment();
   };
-
-  const toggle = () => {
-    if (state === 'on') {
-      setState('pause');
-    } else {
-      setState('start');
-    }
-  };
-  const stop = () => setState('stop');
 
   const buttonText = () => {
     const obj: Record<TimerState, string> = {
@@ -126,7 +119,7 @@ function Timer(props: TimerProps) {
     <div className="timer">
       <span>{Math.ceil(time)}</span>
       <button onClick={toggle}>{buttonText()}</button>
-      <button onClick={stop}>Stop</button>
+      <button onClick={stop}>Reset</button>
     </div>
   );
 }
