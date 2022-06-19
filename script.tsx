@@ -42,11 +42,10 @@ type TimerAction = 'start' | 'stop' | 'pause';
 
 function Timer(props: TimerProps) {
   const rate = props.rate ?? 1000;
-  const freq = 1000 / rate;
 
   const [sprint, setSprint] = useState<Sprint>(null);
   const [time, setTime] = useReducer<number, 'increment' | 'reset'>(
-    (prevState, action) => {
+    (_, action) => {
       const now = Date.now();
       const diff = now - sprint.startTime;
       if (action === 'reset') {
