@@ -1,5 +1,5 @@
-import { useReducer, useState } from "preact/hooks";
-import { render } from "preact";
+import { useReducer, useState } from 'preact/hooks';
+import { render } from 'preact';
 
 interface Slot {
   id: number;
@@ -24,6 +24,11 @@ const removeAtIndex = (arr: Array<any>, index: number) => [
 
 const tryCall = (fn: Function) => fn && fn();
 
+interface Sprint {
+  startTime: number;
+  timeVal: number;
+}
+
 interface TimerProps {
   onStart?: () => void;
   onStop?: () => void;
@@ -32,79 +37,87 @@ interface TimerProps {
   rate?: number;
 }
 
-type TimerState = "on" | "off" | "paused";
-type TimerAction = "start" | "stop" | "pause";
+type TimerState = 'on' | 'off' | 'paused';
+type TimerAction = 'start' | 'stop' | 'pause';
 
 function Timer(props: TimerProps) {
-  const [time, setTime] = useReducer<number, "increment" | number>(
+  const rate = props.rate ?? 1000;
+  const freq = 1000 / rate;
+
+  const [sprint, setSprint] = useState<Sprint>(null);
+  const [time, setTime] = useReducer<number, 'increment' | 'reset'>(
     (prevState, action) => {
-      if (action === "increment") {
-        return prevState + 1;
-      } else {
-        return action;
+      const now = Date.now();
+      const diff = now - sprint.startTime;
+      if (action === 'reset') {
+        return 0;
+      } else if (action === 'increment') {
+        return sprint.timeVal + diff / 1000;
       }
     },
     0
   );
-  const [startTime, setStartTime] = useState(0);
   const [interval, _setInterval] = useState<null | number>(null);
   const [state, setState] = useReducer<TimerState, TimerAction>(
     (prevState, action) => {
       const start = (): TimerState => {
-        _setInterval(setInterval(tick, props.rate ?? 1000));
+        setSprint({
+          startTime: Date.now(),
+          timeVal: time,
+        });
+        _setInterval(setInterval(tick, rate));
         tryCall(props.onStart);
-        return "on";
+        return 'on';
       };
 
       const stop = (): TimerState => {
         clearInterval(interval);
-        setTime(0);
+        setTime('reset');
         tryCall(props.onStop);
-        return "off";
+        return 'off';
       };
 
       const pause = (): TimerState => {
         clearInterval(interval);
         tryCall(props.onPause);
-        return "paused";
+        return 'paused';
       };
 
-      if (action === "stop") {
+      if (action === 'stop') {
         return stop();
-      } else if (action === "start") {
+      } else if (action === 'start') {
         return start();
-      } else if (action === "pause" && prevState === "paused") {
+      } else if (action === 'pause' && prevState === 'paused') {
         return start();
-      } else if (action === "pause" && prevState === "on") {
+      } else if (action === 'pause' && prevState === 'on') {
         return pause();
       }
 
       return prevState;
     },
-    "off"
+    'off'
   );
 
-  // TODO: Increment based on time between last tick instead of interval, which is unreliable
-  const increment = () => setTime("increment");
+  const increment = () => setTime('increment');
   const tick = () => {
     tryCall(props.onTick);
     increment();
   };
 
   const toggle = () => {
-    if (state === "on") {
-      setState("pause");
+    if (state === 'on') {
+      setState('pause');
     } else {
-      setState("start");
+      setState('start');
     }
   };
-  const stop = () => setState("stop");
+  const stop = () => setState('stop');
 
   const buttonText = () => {
     const obj: Record<TimerState, string> = {
-      on: "Pause",
-      off: "Start",
-      paused: "Resume",
+      on: 'Pause',
+      off: 'Start',
+      paused: 'Resume',
     };
 
     return obj[state];
@@ -112,7 +125,7 @@ function Timer(props: TimerProps) {
 
   return (
     <div className="timer">
-      <span>{time}</span>
+      <span>{Math.ceil(time)}</span>
       <button onClick={toggle}>{buttonText()}</button>
       <button onClick={stop}>Stop</button>
     </div>
@@ -126,7 +139,7 @@ function App() {
   );
 
   const addSlot = () => alterSlots((list) => [...list, newSlot()]);
-  const removeSlot = (id: Slot["id"]) =>
+  const removeSlot = (id: Slot['id']) =>
     alterSlots((list) =>
       removeAtIndex(
         slots,
@@ -136,12 +149,12 @@ function App() {
 
   return (
     <main>
-      <Timer />
+      <Timer rate={100} />
       <button onClick={addSlot}>Add</button>
       <ul>
         {slots.map((slot) => (
           <li>
-            {slot.id}{" "}
+            {slot.id}{' '}
             <button onClick={() => removeSlot(slot.id)}>Remove</button>
           </li>
         ))}
